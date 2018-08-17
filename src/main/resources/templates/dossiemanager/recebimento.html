@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+	
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<title>Recebimento</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+</head>
+
+<body>
+     <div class="panel panel-default" style="margin: 60px">
+
+		<div class="panel-heading">
+			<h1 class="panel-title">Pedidos</h1>
+		</div>
+
+		<form class="form-inline" method="POST" th:object="${pedidos}" th:action="@{/clientes}" style="margin: 20px 0">
+			<div class="form-group">
+				<input type="text" class="form-control" placeholder="Pedido"/> 
+			</div>
+		</form>
+
+        <div class="panel-body">
+			<table class="table table-striped table table-sm">
+				<thead>
+					<tr>
+					    <th>Pedido</th>
+						<th>CPF</th>
+						<th>CNPJ</th>
+						<th>AR</th>
+						<th>Caixa Externa</th>
+						<th>Caixa Interna</th>
+						<th>Editar</th>
+						<th>Excluir</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="pedido : ${pedidos}">
+					    <td th:text="${pedido.prDid}">Pedido</td>
+						<td th:text="${pedido.pfsCpf}">CPF</td>
+						<td th:text="${pedido.PjrCnpj}">CNPJ</td>
+						<td th:text="${pedido.PjrCnpj}">AR</td>
+						<td th:text="${pedido.PjrCnpj}">Caixa Externa</td>
+						<td th:text="${pedido.PjrCnpj}">Caixa Interna</td>
+						<td><a th:href="${'/recebimento/' + pedido.prDid}" >Excluir</a></td>
+						<td><a th:href="${'/recebimento/' + pedido}" >Alterar</a></td>
+						
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+</body>
+</html>
