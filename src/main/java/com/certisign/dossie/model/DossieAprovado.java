@@ -7,13 +7,19 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 
 @Entity(name = "tbl_dossie")
+@NamedQueries({
+	@NamedQuery(name = "DOSSIE.PROCURA_POR_PEDIDO", query = "from tbl_dossie d where d.caixaExterna = :cxExt AND d.caixaInterna = :cxInt")})
 public class DossieAprovado {
 	
 	private static final long serialVersionUID = 1L;
+	
+	public final static String PROCURA_POR_PEDIDO = "DOSSIE.PROCURA_POR_PEDIDO";
 
 	@Id
 	@SequenceGenerator(name = "dossie_seq", sequenceName = "dossie_seq")
@@ -21,7 +27,6 @@ public class DossieAprovado {
 	@Column(name = "PK_AD_DOSSIE")
 	private Long id;
 	
-    @JoinColumn(name="PEDID")
 	@Column(name = "FK_CD_PEDIDO")
 	private String numeroPedido;
 
@@ -37,7 +42,7 @@ public class DossieAprovado {
 	@Column(name = "FK_AD_CAIXA_INTERNA")
 	private String caixaInterna;
 
-	@Column(name = "FK_TP_TERMO")
+	@Column(name = "TIPO_TERMO")
 	private String tipoTermo;
 
 	@Column(name = "DT_APROVACAO")
@@ -58,14 +63,24 @@ public class DossieAprovado {
 	@Column(name = "DT_RESGATE")
 	private Timestamp dataResgate;
 
-	@Column(name = "ID_STATUS_AR")
-	private Integer statusAr;
+	@Column(name = "STATUS_AR")
+	private String statusAr;
 
-	@Column(name = "ID_STATUS_PEDIDO")
-	private Integer idStatusPedido;
+	@Column(name = "STATUS_PEDIDO")
+	private String statusPedido;
 
 	@Column(name = "ID_LEGADO")
-	private Integer idLegado;
+	private Long idLegado;
+	
+	@Column(name = "CPF")
+	private Long cpf;
+	
+	@Column(name = "CNPJ")
+	private Long cnpj;
+	
+	@Column(name = "CD_USUARIO")
+	private Long cdUsuario;
+		
 
 	public Long getId() {
 		return id;
@@ -171,28 +186,52 @@ public class DossieAprovado {
 		this.dataResgate = dataResgate;
 	}
 
-	public Integer getStatusAr() {
+	public String getStatusAr() {
 		return statusAr;
 	}
 
-	public void setStatusAr(Integer statusAr) {
+	public void setStatusAr(String statusAr) {
 		this.statusAr = statusAr;
 	}
 
-	public Integer getIdStatusPedido() {	
-		return idStatusPedido;
-	}
-
-	public void setIdStatusPedido(Integer idStatusPedido) {
-		this.idStatusPedido = idStatusPedido;
-	}
-
-	public Integer getIdLegado() {
+	public Long getIdLegado() {
 		return idLegado;
 	}
 
-	public void setIdLegado(Integer idLegado) {
+	public void setIdLegado(Long idLegado) {
 		this.idLegado = idLegado;
+	}
+
+	public Long getCpf() {
+		return cpf;
+	}
+
+	public void setCpf(Long cpf) {
+		this.cpf = cpf;
+	}
+
+	public Long getCnpj() {
+		return cnpj;
+	}
+
+	public void setCnpj(Long cnpj) {
+		this.cnpj = cnpj;
+	}
+
+	public Long getCdUsuario() {
+		return cdUsuario;
+	}
+
+	public void setCdUsuario(Long cdUsuario) {
+		this.cdUsuario = cdUsuario;
+	}
+
+	public String getStatusPedido() {	
+		return statusPedido;
+	}
+
+	public void setIdStatusPedido(String statusPedido) {
+		this.statusPedido = statusPedido;
 	}
 
 	public static long getSerialversionuid() {

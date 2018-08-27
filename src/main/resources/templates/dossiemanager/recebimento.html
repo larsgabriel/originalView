@@ -7,19 +7,23 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <title>Recebimento</title>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"/>
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"></link>
+<script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
 </head>
 
 <body>
+	<div th:replace="dossiemanager/nav :: nav"></div>
      <div class="panel panel-default" style="margin: 60px">
 
 		<div class="panel-heading">
-			<h1 class="panel-title">Pedidos</h1>
+			<h1 class="panel-title">Recebimento</h1>
 		</div>
-
-		<form class="form-inline" method="POST" th:object="${pedidos}" th:action="@{/clientes}" style="margin: 20px 0">
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/recebimento}" style="margin: 20px 0">
 			<div class="form-group">
-				<input type="text" class="form-control" placeholder="Pedido"/> 
+				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
+				<input type="text" class="form-control" name="cxExterna" th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa"/> 
+				<input type="text" class="form-control" name="cxInterna" th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna"/>
+				<button type="submit" class="btn btn-primary">Adicionar</button>
 			</div>
 		</form>
 
@@ -28,8 +32,6 @@
 				<thead>
 					<tr>
 					    <th>Pedido</th>
-						<th>CPF</th>
-						<th>CNPJ</th>
 						<th>AR</th>
 						<th>Caixa Externa</th>
 						<th>Caixa Interna</th>
@@ -39,20 +41,17 @@
 				</thead>
 				<tbody>
 					<tr th:each="pedido : ${pedidos}">
-					    <td th:text="${pedido.prDid}">Pedido</td>
-						<td th:text="${pedido.pfsCpf}">CPF</td>
-						<td th:text="${pedido.PjrCnpj}">CNPJ</td>
-						<td th:text="${pedido.PjrCnpj}">AR</td>
-						<td th:text="${pedido.PjrCnpj}">Caixa Externa</td>
-						<td th:text="${pedido.PjrCnpj}">Caixa Interna</td>
-						<td><a th:href="${'/recebimento/' + pedido.prDid}" >Excluir</a></td>
-						<td><a th:href="${'/recebimento/' + pedido}" >Alterar</a></td>
+					    <td th:text="${pedido.numero}">Pedido</td>
+						<td th:text="${pedido.ar}">AR</td>
+						<td th:text="${pedido.caixaExterna}">Caixa Externa</td>
+						<td th:text="${pedido.cxinterna}">Caixa Interna</td>
+						<td><a th:href="${'/recebimento/' + pedido.id}" >Excluir</a></td>
+						<td><a th:href="${'/recebimento/' + pedido.id}" >Alterar</a></td>
 						
 					</tr>
 				</tbody>
 			</table>
 		</div>
 	</div>
-	
 </body>
 </html>

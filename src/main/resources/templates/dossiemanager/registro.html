@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"	xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<title>Recebimento</title>
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"></link>
+</head>
+<body>
+	 <div th:replace="dossiemanager/nav :: nav"></div>
+     <div class="panel panel-default" style="margin: 60px">
+
+		<div class="panel-heading">
+			<h1 class="panel-title">Registro</h1>
+		</div>
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/inserir}" style="margin: 20px 0">
+			<div class="form-group">
+				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
+				<button type="submit" class="btn btn-primary">Adicionar</button>
+			</div>
+		</form>
+
+        <div class="panel-body">
+			<table class="table table-striped table table-sm">
+				<thead>
+					<tr>
+					    <th>Pedido</th>
+						<th>CPF</th>
+						<th>CNPJ</th>
+						<th>AR</th>
+						<th>Status Ar</th>
+						<th>Status Certisign</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="pedido : ${pedidos}">
+					    <td th:text="${pedido.numeroPedido}">Pedido</td>
+						<td th:text="${pedido.cpf}">CPF</td>
+						<td th:text="${pedido.cnpj}">CNPJ</td>
+						<td th:text="${pedido.statusAr}">Status Ar</td>
+						<td th:text="${pedido.idStatusPedido}">Status Certisign</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,11 +1,11 @@
 package com.certisign.dossie.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.CrudRepository;
 
 import com.certisign.dossie.model.DossieAprovado;
 
-public interface DossieRepository extends JpaRepository<DossieAprovado, Long>{
+public interface DossieRepository extends CrudRepository<DossieAprovado, Long>{
 	
 	
-
+	
 }
