@@ -1,28 +1,21 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:th="http://www.thymeleaf.org">
-	
-<head>
+<html xmlns="http://www.w3.org/1999/xhtml"	xmlns:th="http://www.thymeleaf.org">
 <meta charset="UTF-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <title>Recebimento</title>
 <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"></link>
-<script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
 </head>
-
 <body>
-	<div th:replace="dossiemanager/nav :: nav"></div>
+	 <div th:replace="dossiemanager/nav :: nav"></div>
      <div class="panel panel-default" style="margin: 60px">
 
 		<div class="panel-heading">
-			<h1 class="panel-title">Recebimento</h1>
+			<h3 class="panel-title">Recebimento</h3>
 		</div>
-		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/recebimento}" style="margin: 20px 0">
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/inserir}" style="margin: 20px 0">
 			<div class="form-group">
 				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
-				<input type="text" class="form-control" name="cxExterna" th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa"/> 
-				<input type="text" class="form-control" name="cxInterna" th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna"/>
 				<button type="submit" class="btn btn-primary">Adicionar</button>
 			</div>
 		</form>
@@ -32,22 +25,20 @@
 				<thead>
 					<tr>
 					    <th>Pedido</th>
+						<th>CPF</th>
+						<th>CNPJ</th>
 						<th>AR</th>
-						<th>Caixa Externa</th>
-						<th>Caixa Interna</th>
-						<th>Editar</th>
-						<th>Excluir</th>
+						<th>Status Ar</th>
+						<th>Status Certisign</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr th:each="pedido : ${pedidos}">
-					    <td th:text="${pedido.numero}">Pedido</td>
-						<td th:text="${pedido.ar}">AR</td>
-						<td th:text="${pedido.caixaExterna}">Caixa Externa</td>
-						<td th:text="${pedido.cxinterna}">Caixa Interna</td>
-						<td><a th:href="${'/recebimento/' + pedido.id}" >Excluir</a></td>
-						<td><a th:href="${'/recebimento/' + pedido.id}" >Alterar</a></td>
-						
+					    <td th:text="${pedido.numeroPedido}">Pedido</td>
+						<td th:text="${pedido.cpf}">CPF</td>
+						<td th:text="${pedido.cnpj}">CNPJ</td>
+						<td th:text="${pedido.statusAr}">Status Ar</td>
+						<td th:text="${pedido.idStatusPedido}">Status Certisign</td>
 					</tr>
 				</tbody>
 			</table>

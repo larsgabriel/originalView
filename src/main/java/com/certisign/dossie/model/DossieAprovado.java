@@ -13,22 +13,18 @@ import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 
 @Entity(name = "tbl_dossie")
-@NamedQueries({
-	@NamedQuery(name = "DOSSIE.PROCURA_POR_PEDIDO", query = "from tbl_dossie d where d.caixaExterna = :cxExt AND d.caixaInterna = :cxInt")})
 public class DossieAprovado {
 	
 	private static final long serialVersionUID = 1L;
 	
-	public final static String PROCURA_POR_PEDIDO = "DOSSIE.PROCURA_POR_PEDIDO";
-
 	@Id
 	@SequenceGenerator(name = "dossie_seq", sequenceName = "dossie_seq")
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dossie_seq")
 	@Column(name = "PK_AD_DOSSIE")
 	private Long id;
 	
-	@Column(name = "FK_CD_PEDIDO")
-	private String numeroPedido;
+	@Column(name = "CD_PEDIDO")
+	private Long numeroPedido;
 
 	@Column(name = "CD_AR")
 	private String ar;
@@ -36,10 +32,10 @@ public class DossieAprovado {
 	@Column(name = "CD_POSTO")
 	private String posto;
 
-	@Column(name = "FK_AD_CAIXA_EXTERNA")
+	@Column(name = "CD_CAIXA_EXTERNA")
 	private String caixaExterna;
 
-	@Column(name = "FK_AD_CAIXA_INTERNA")
+	@Column(name = "CD_CAIXA_INTERNA")
 	private String caixaInterna;
 
 	@Column(name = "TIPO_TERMO")
@@ -72,15 +68,41 @@ public class DossieAprovado {
 	@Column(name = "ID_LEGADO")
 	private Long idLegado;
 	
-	@Column(name = "CPF")
+	@Column(name = "NR_CPF")
 	private Long cpf;
 	
-	@Column(name = "CNPJ")
+	@Column(name = "NR_CNPJ")
 	private Long cnpj;
 	
 	@Column(name = "CD_USUARIO")
-	private Long cdUsuario;
+	private String cdUsuario;
+	
+	@Column(name = "DT_INSERCAO")
+	private Timestamp dataInsercao;
+	
+	@Column(name = "DT_ULT_ATUALIZACAO")
+	private Timestamp dataUltAtualizacao;
 		
+
+	public Timestamp getDataInsercao() {
+		return dataInsercao;
+	}
+
+	public void setDataInsercao(Timestamp dataInsercao) {
+		this.dataInsercao = dataInsercao;
+	}
+
+	public Timestamp getDataUltAtualizacao() {
+		return dataUltAtualizacao;
+	}
+
+	public void setDataUltAtualizacao(Timestamp dataUltAtualizacao) {
+		this.dataUltAtualizacao = dataUltAtualizacao;
+	}
+
+	public void setStatusPedido(String statusPedido) {
+		this.statusPedido = statusPedido;
+	}
 
 	public Long getId() {
 		return id;
@@ -90,11 +112,11 @@ public class DossieAprovado {
 		this.id = id;
 	}
 
-	public String getNumeroPedido() {
+	public Long getNumeroPedido() {
 		return numeroPedido;
 	}
 
-	public void setNumeroPedido(String numeroPedido) {
+	public void setNumeroPedido(Long numeroPedido) {
 		this.numeroPedido = numeroPedido;
 	}
 
@@ -218,11 +240,11 @@ public class DossieAprovado {
 		this.cnpj = cnpj;
 	}
 
-	public Long getCdUsuario() {
+	public String getCdUsuario() {
 		return cdUsuario;
 	}
 
-	public void setCdUsuario(Long cdUsuario) {
+	public void setCdUsuario(String cdUsuario) {
 		this.cdUsuario = cdUsuario;
 	}
 
