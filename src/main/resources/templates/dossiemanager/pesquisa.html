@@ -6,31 +6,26 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="viewport" content="width=device-width" />
 <title>Pesquisa de Dossiê</title>
-<!-- <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"></link> -->
-<!-- <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script> -->
-<script type="text/javascript" src="'"></script>
-<script type="text/javascript" src="webjars/bootstrap/4.1.3/js/bootsr.min.js"></script>
-<link rel="stylesheet" href="webjars/bootstrap/4.1.3/css/bootstrap.min.css"></link>
+<script type="text/javascript"
+	src="webjars/bootstrap/4.1.3/js/bootsr.min.js"></script>
+<link rel="stylesheet"
+	href="webjars/bootstrap/4.1.3/css/bootstrap.min.css"></link>
 
 </head>
 <body>
 	<div th:replace="dossiemanager/nav :: nav"></div>
-	<div class="panel panel-default" style="margin: 60px">
+	<div  style="margin: 20px">
 
 		<div class="panel-heading">
 			<h3 class="panel-title">Pesquisa de Dossiê</h3>
 		</div>
 		<form class="form-inline" method="GET" th:object="${pedido}"
-			th:action="@{dossiemanager/pesquisar}" style="margin: 20px 0">
+			th:action="@{/pesquisar}" style="margin: 20px 0">
 			<div class="form-group">
-				<input type="text" class="form-control-sm" name="numeroPedido"
-					th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido" />
-				<input type="text" class="ml-3 form-control-sm" name="cxInterna"
-					th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna" />
-				<input type="text" class="ml-3 form-control-sm" name="cxExterna"
-					th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa" />
-				<select class="ml-3 custom-select-sm" id="statusAr" name="statusAr"
-					th:value="${statusAr}">
+				<input type="text" class="form-control-sm" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido" />
+				<input type="text" class="ml-3 form-control-sm" name="cxInterna" th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna" />
+				<input type="text" class="ml-3 form-control-sm" name="cxExterna" th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa" />
+				<select class="ml-3 custom-select-sm" id="statusAr" name="statusAr"	th:value="${statusAr}">
 					<option selected>Status Ar</option>
 					<option value="Pendente">Pendente</option>
 					<option value="Enviado">Enviado</option>
@@ -67,6 +62,17 @@
 					</tr>
 				</tbody>
 			</table>
+			<hr/>
+			<nav>
+			<ul class= "pagination">
+				<li class="page-item" th:if="${pedidos.totalPages > 0}" th:each="pageNumber : ${pageNumbers}">
+					<a  
+					th:href="@{/pesquisa(size=${pedidos.size}, page=${pageNumber})}" class="page-link"
+					th:text=${pageNumber}>
+					</a>
+				</li>
+			</ul>
+			</nav>
 		</div>
 	</div>
 </body>
