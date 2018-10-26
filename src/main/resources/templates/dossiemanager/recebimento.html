@@ -13,7 +13,7 @@
 		<div class="panel-heading">
 			<h3 class="panel-title">Recebimento</h3>
 		</div>
-		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/inserir}" style="margin: 20px 0">
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/recebimento}" style="margin: 20px 0">
 			<div class="form-group">
 				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
 				<button type="submit" class="btn btn-primary">Adicionar</button>

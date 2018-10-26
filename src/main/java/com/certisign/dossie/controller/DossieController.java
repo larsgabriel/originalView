@@ -40,7 +40,7 @@ public class DossieController {
 	private static int currentPage = 1;
 	private static int pageSize = 10;
 
-	@RequestMapping("pesquisa")
+	@RequestMapping("inicial")
 	@ResponseBody
 	public ModelAndView pesquisa(@RequestParam("page") Optional<Integer> page,
 			@RequestParam("size") Optional<Integer> size) {
@@ -71,45 +71,36 @@ public class DossieController {
 		return model;
 	}
 
-	@RequestMapping("registro")
+	@RequestMapping(value = "dossiemanager/registro", method = RequestMethod.GET)
 	@ResponseBody
-	public ModelAndView registro() {
+	public ModelAndView pesquisaregistro(@RequestParam Long numeroPedido, String cxInterna, String cxExterna) {
 
-		ModelAndView model = new ModelAndView("dossiemanager/registro");
+//		DossieAprovado dossie = service.getDossie(numeroPedido, cxInterna, cxExterna);
+//		dossieRepository.save(dossie);
+//
+//		ModelAndView model = new ModelAndView("dossiemanager/registro");
+//
+//		model.addObject("pedidos", service.findPedidoByNumeroPedido(cxInterna, cxExterna));
+//		model.addObject(new DossieAprovado());
 
-		return model;
+		return null;
 	}
 
-	@RequestMapping(value = "dossiemanager/inserir", method = RequestMethod.GET)
-	@ResponseBody
-	public ModelAndView pesquisaregistro(@RequestParam String numeroPedido, String cxInterna, String cxExterna) {
-
-		DossieAprovado dossie = service.getDossie(numeroPedido, cxInterna, cxExterna);
-		dossieRepository.save(dossie);
-
-		ModelAndView model = new ModelAndView("dossiemanager/registro");
-
-		model.addObject("pedidos", service.findPedidoByNumeroPedido(cxInterna, cxExterna));
-		model.addObject(new DossieAprovado());
-
-		return model;
-	}
-
-	@RequestMapping(value = "/pesquisar", method = RequestMethod.GET)
+	@RequestMapping(value = "/pesquisa")
 	@ResponseBody
 	public ModelAndView pesquisa(@RequestParam("page") Optional<Integer> page,
 			@RequestParam("size") Optional<Integer> size, @RequestParam String numeroPedido, String cxInterna,
-			String cxExterna, String statusAr, RedirectAttributes attributes) {
+			String cxExterna, String statusAr, String statusCertisign,  RedirectAttributes attributes) {
 
 		page.ifPresent(p -> currentPage = p);
 		size.ifPresent(s -> pageSize = s);
 		ModelAndView model = new ModelAndView("dossiemanager/pesquisa");
 
 		Page<DossieAprovado> dossiePage = service.pesquisa(PageRequest.of(currentPage - 1, pageSize), numeroPedido,
-				cxInterna, cxExterna, statusAr.toUpperCase());
+				cxInterna, cxExterna, statusAr, statusCertisign);
 
 		if (dossiePage != null) {
-			model.addObject("dossiePage", dossiePage);
+			model.addObject("pedidos", dossiePage);
 		}
 		int totalPages = dossiePage.getTotalPages();
 		if (totalPages > 0) {

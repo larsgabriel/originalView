@@ -1,102 +1,156 @@
 package com.certisign.dossie.service;
 
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import com.certisign.dossie.model.DossieAprovado;
 import com.certisign.dossie.repository.DossieRepository;
 
 @Service
 public class DossieService {
-	
-	
+
 	@PersistenceContext
 	EntityManager em;
-	
+
 	@Autowired
 	DossieRepository repository;
 
 	public DossieAprovado getDossie(String numeroPedido, String cxInterna, String cxExterna) {
-
 		DossieAprovado dossie = new DossieAprovado();
-		
 		try {
 			String tipoTermo = tratarTermo(numeroPedido);
 			Long pedido = tratarPedido(numeroPedido);
 			dossie = findPedido(pedido);
 			dossie.setNumeroPedido(pedido);
-			dossie.setIdStatusPedido("ESTOCADO");
+			dossie.setStatusCertisign("ESTOCADO");
 			dossie.setTipoTermo(tipoTermo);
 			dossie.setCaixaExterna(cxExterna);
 			dossie.setCaixaInterna(cxInterna);
 
 		} catch (Exception e) {
-			
+
 		}
-
 		return dossie;
-
 	}
 
 	public DossieAprovado findPedido(Long numeroPedido) {
-		DossieAprovado pedidos = (DossieAprovado) repository.findByNumeroPedido(numeroPedido);
+		DossieAprovado pedidos = repository.findByNumeroPedido(numeroPedido);
 		return pedidos;
 	}
 
-	public List<DossieAprovado> findPedidoByNumeroPedido(String cxInterna, String cxExterna) {
-		List<DossieAprovado> pedidos = repository.findByCaixaInternaAndCaixaInterna(cxExterna, cxInterna);
-		return pedidos;
-	}
+	public Page<DossieAprovado> pesquisa(Pageable pageable, String numeroPedido, String cxInterna, String cxExterna,
+			String statusAr, String statusCerti) {
 
-	public Page<DossieAprovado> pesquisa(Pageable pageable, String numeroPedido, String cxInterna, String cxExterna, String statusAr) {
-		
 		int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        Long pedido = 0l;
-        if(!numeroPedido.equals("")){
-        	pedido = tratarPedido(numeroPedido);
-        }
-		
-		String sb = buildDinamicQuery(pedido, cxInterna, cxExterna, statusAr).toString();
-		
-		Query query = em.createQuery(sb);
-		
-		List<DossieAprovado> pedidos = query.getResultList();
+		int currentPage = pageable.getPageNumber();
+		int startItem = currentPage * pageSize;
+		Long pedido = null;
+		Page<DossieAprovado> dossiePage = null;
+		List<DossieAprovado> pedidos = null;
 		List<DossieAprovado> dossies;
-		
-		if(pedidos.size() < startItem){
-			dossies = Collections.emptyList();			
-		}else{
-			int toIndex = Math.min(startItem + pageSize, pedidos.size());
-			dossies = pedidos.subList(startItem, toIndex);
+
+
+		if (!numeroPedido.equals("")) {
+			pedido = tratarPedido(numeroPedido);
 		}
+
+		try {
+			
+			Timestamp  dataInsercao = transformaStringParaData();
+			
+			if (!statusAr.equals("Status Ar") || !statusCerti.equals("Status Certisign") || !cxExterna.equals("") || !cxInterna.equals("") || pedido != null) {
+				pedidos = buscaPedidosPorFiltros(pedido, cxInterna, cxExterna,  statusAr, statusCerti);
+			}else {
+				pedidos =  repository.findAllByDataInsercaoAfter(dataInsercao);
+			}
+
+			if (pedidos.size() < startItem) {
+				dossies = Collections.emptyList();
+			} else {
+				int toIndex = Math.min(startItem + pageSize, pedidos.size());
+				dossies = pedidos.subList(startItem, toIndex);
+			}
 		
-		Page<DossieAprovado> dossiePage = new PageImpl<DossieAprovado>(dossies, PageRequest.of(currentPage, pageSize), dossies.size());
+			dossiePage = new PageImpl<DossieAprovado>(dossies, PageRequest.of(currentPage, pageSize), dossies.size());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return dossiePage;
 
 	}
 
+	public List<DossieAprovado> buscaPedidosPorFiltros(Long numeroPedido, String cxInterna, String cxExterna,
+			String statusAr, String statusCerti) {
+
+		CriteriaBuilder qb = em.getCriteriaBuilder();
+		CriteriaQuery cq = qb.createQuery();
+		Root<DossieAprovado> dossie = cq.from(DossieAprovado.class);
+		List<Predicate> predicates = new ArrayList<Predicate>();
+		List<DossieAprovado> pedidos;
+		Timestamp  dataInsercao = transformaStringParaData();
+
+		if (numeroPedido != null) {
+			predicates.add(qb.equal(dossie.get("numeroPedido"), numeroPedido));
+		}
+		if (!cxInterna.equals("")) {
+			predicates.add(qb.equal(dossie.get("caixaInterna"), cxInterna));
+		}
+		if (!cxExterna.equals("")) {
+			predicates.add(qb.equal(dossie.get("caixaExterna"), cxExterna));
+		}
+		if (!statusAr.equals("Status Ar")) {
+			predicates.add(qb.equal(dossie.get("statusAr"), statusAr.toUpperCase()));
+			predicates.add(qb.greaterThan(dossie.get("dataInsercao"), dataInsercao));
+		}
+		if (!statusCerti.equals("Status Certisign")) {
+			predicates.add(qb.equal(dossie.get("statusCertisign"), statusCerti.toUpperCase()));
+			predicates.add(qb.greaterThan(dossie.get("dataInsercao"), dataInsercao));
+		}
+
+		cq.select(dossie).where(predicates.toArray(new Predicate[] {}));
+		pedidos = em.createQuery(cq).getResultList();
+
+		return pedidos;
+	}
+	
+	public Timestamp transformaStringParaData() {
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DATE, -30);
+		Timestamp data = new Timestamp(cal.getTimeInMillis());
+		return data;
+
+	}
+	
 	public Long tratarPedido(String numeroPedido) {
 
 		String pedido = "";
 		if (numeroPedido.contains("R") || numeroPedido.contains("T")) {
 			String[] parts = numeroPedido.split("-");
 			pedido = parts[0];
-		}else {
+		} else {
 			return Long.parseLong(numeroPedido);
 		}
-		
+
 		return Long.parseLong(pedido);
 	}
 
@@ -109,47 +163,27 @@ public class DossieService {
 		}
 		return termo;
 	}
-	
-	public StringBuilder buildDinamicQuery(Long numeroPedido, String cxInterna, String cxExterna, String statusAr){
-		
-		StringBuilder sb= new StringBuilder("from tbl_dossie");
-		
-		if(numeroPedido != 0 || !cxInterna.equals("") || !cxInterna.equals("") || !cxExterna.equals("")){
-			sb.append("	d where");			
-		}
-		if(numeroPedido != 0){
-			sb.append(" D.FK_CD_PEDIDO =" + numeroPedido);
-		}
-		if(!cxInterna.equals("")){
-			sb.append(" D.FK_AD_CAIXA_INTERNA =" + cxInterna);
-		}
-		if(!cxExterna.equals("")){
-			sb.append(" D.FK_AD_CAIXA_EXTERNA =" + cxExterna);
-		}
-		
-		return sb;
-}
-	
-	String SQL_SUBLIST = "from tbl_dossie WHERE ROWNUM BETWEEN %d AND %d";
+
 	public Page<DossieAprovado> getAll(Pageable pageable) {
- 	    int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-        int startItem = currentPage * pageSize;
-        List<DossieAprovado> list;
-        
+
+		String SQL_SUBLIST = "from tbl_dossie WHERE ROWNUM BETWEEN %d AND %d";
+		int pageSize = pageable.getPageSize();
+		int currentPage = pageable.getPageNumber();
+		int startItem = currentPage * pageSize;
+		List<DossieAprovado> list;
+
 		String sql = String.format(SQL_SUBLIST, 1, 50);
 		Query query = em.createQuery(sql);
 		List<DossieAprovado> pedidos = query.getResultList();
-		
+
 		if (pedidos.size() < startItem) {
-            list = Collections.emptyList();
-        } else {
-            int toIndex = Math.min(startItem + pageSize, pedidos.size());
-            list = pedidos.subList(startItem, toIndex);
-        }
- 
-        Page<DossieAprovado> bookPage = new PageImpl<DossieAprovado>(list, PageRequest.of(currentPage, pageSize), pedidos.size());
- 
+			list = Collections.emptyList();
+		} else {
+			int toIndex = Math.min(startItem + pageSize, pedidos.size());
+			list = pedidos.subList(startItem, toIndex);
+		}
+		Page<DossieAprovado> bookPage = new PageImpl<DossieAprovado>(list, PageRequest.of(currentPage, pageSize),
+				pedidos.size());
 		return bookPage;
 	}
 

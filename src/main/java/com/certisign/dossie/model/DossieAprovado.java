@@ -1,4 +1,5 @@
 package com.certisign.dossie.model;
+
 import java.sql.Timestamp;
 
 import javax.persistence.Column;
@@ -10,16 +11,16 @@ import javax.persistence.SequenceGenerator;
 
 @Entity(name = "tbl_dossie")
 public class DossieAprovado {
-	
+
 	private static final long serialVersionUID = 1L;
-	
+
 	@Id
 	@SequenceGenerator(name = "dossie_seq", sequenceName = "dossie_seq")
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "dossie_seq")
 	@Column(name = "PK_AD_DOSSIE")
 	private Long id;
-	
-	@Column(name = "CD_PEDIDO")
+
+	@Column(name = "FK_CD_PEDIDO")
 	private Long numeroPedido;
 
 	@Column(name = "CD_AR")
@@ -58,27 +59,34 @@ public class DossieAprovado {
 	@Column(name = "STATUS_AR")
 	private String statusAr;
 
-	@Column(name = "STATUS_PEDIDO")
-	private String statusPedido;
+	@Column(name = "STATUS_CERTISIGN")
+	private String statusCertisign;
 
 	@Column(name = "ID_LEGADO")
 	private Long idLegado;
-	
+
 	@Column(name = "NR_CPF")
 	private Long cpf;
-	
+
 	@Column(name = "NR_CNPJ")
 	private Long cnpj;
-	
+
 	@Column(name = "CD_USUARIO")
 	private String cdUsuario;
-	
+
 	@Column(name = "DT_INSERCAO")
 	private Timestamp dataInsercao;
-	
+
 	@Column(name = "DT_ULT_ATUALIZACAO")
 	private Timestamp dataUltAtualizacao;
-		
+
+	public String getStatusCertisign() {
+		return statusCertisign;
+	}
+
+	public void setStatusCertisign(String statusCertisign) {
+		this.statusCertisign = statusCertisign;
+	}
 
 	public Timestamp getDataInsercao() {
 		return dataInsercao;
@@ -94,10 +102,6 @@ public class DossieAprovado {
 
 	public void setDataUltAtualizacao(Timestamp dataUltAtualizacao) {
 		this.dataUltAtualizacao = dataUltAtualizacao;
-	}
-
-	public void setStatusPedido(String statusPedido) {
-		this.statusPedido = statusPedido;
 	}
 
 	public Long getId() {
@@ -242,14 +246,6 @@ public class DossieAprovado {
 
 	public void setCdUsuario(String cdUsuario) {
 		this.cdUsuario = cdUsuario;
-	}
-
-	public String getStatusPedido() {	
-		return statusPedido;
-	}
-
-	public void setIdStatusPedido(String statusPedido) {
-		this.statusPedido = statusPedido;
 	}
 
 	public static long getSerialversionuid() {

@@ -17,7 +17,7 @@
 		<div class="panel-heading">
 		<h3 class="panel-title">Registro</h3>
 		</div>
-		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/inserir}" style="margin: 20px 0">
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/registrar}" style="margin: 20px 0">
 			<div class="form-group">
 				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
 				<input type="text" class="form-control" name="cxExterna" th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa"/> 

@@ -20,7 +20,7 @@
 			<h3 class="panel-title">Pesquisa de Dossiê</h3>
 		</div>
 		<form class="form-inline" method="GET" th:object="${pedido}"
-			th:action="@{/pesquisar}" style="margin: 20px 0">
+			th:action="@{/pesquisa}" style="margin: 20px 0">
 			<div class="form-group">
 				<input type="text" class="form-control-sm" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido" />
 				<input type="text" class="ml-3 form-control-sm" name="cxInterna" th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna" />
@@ -29,6 +29,12 @@
 					<option selected>Status Ar</option>
 					<option value="Pendente">Pendente</option>
 					<option value="Enviado">Enviado</option>
+				</select>
+				<select class="ml-3 custom-select-sm" id="statusCertisign" name="statusCertisign"	th:value="${statusCertisign}">
+					<option selected>Status Certisign</option>
+					<option value="Pendente">Pendente</option>
+					<option value="Enviado">Enviado</option>
+					<option value="Enviado">Estocado</option>
 				</select>
 				<button type="submit" class="btn btn-primary btn-sm ml-3">Pesquisar</button>
 			</div>
@@ -42,6 +48,8 @@
 						<th>CPF</th>
 						<th>CNPJ</th>
 						<th>AR</th>
+						<th>Cx.Interna</th>
+						<th>Cx.Externa</th>
 						<th>Status Ar</th>
 						<th>Status Certisign</th>
 					</tr>
@@ -53,11 +61,12 @@
 						<td th:text="${pedido.cpf}">CPF</td>
 						<td th:text="${pedido.cnpj}">CNPJ</td>
 						<td th:text="${pedido.ar}">Ar</td>
+						<td th:text="${pedido.caixaInterna}">Cx.Interna</td>
+						<td th:text="${pedido.caixaExterna}">Cx.Externa</td>
 						<td th:text="${pedido.statusAr}"
-							th:class="${pedido.statusAr == 'ENVIADO'} ? 'text-success' : (${pedido.statusAr == 'PENDENTE'} ? 'text-danger' : 'text-warning')">Status
-							Ar</td>
-						<td th:text="${pedido.statusPedido}"
-							th:class="${pedido.statusPedido == 'ESTOCADO'} ? 'text-success' : (${pedido.statusAr == 'PENDENTE'} ? 'text-danger' : 'text-warning')">Status
+							th:class="${pedido.statusAr == 'ENVIADO'} ? 'text-success' : (${pedido.statusAr == 'PENDENTE'} ? 'text-danger' : 'text-warning')">Status Ar</td>
+						<td th:text="${pedido.statusCertisign}"
+							th:class="${pedido.statusCertisign == 'ESTOCADO'} ? 'text-success' : (${pedido.statusCertisign == 'PENDENTE'} ? 'text-danger' : 'text-warning')">Status
 							Certisign</td>
 					</tr>
 				</tbody>
