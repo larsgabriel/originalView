@@ -50,7 +50,7 @@ public class DossieController {
 
 		ModelAndView model = new ModelAndView("dossiemanager/pesquisa");
 
-		Page<DossieAprovado> listapedidos = service.getAll(PageRequest.of(currentPage - 1, pageSize));
+		Page<DossieAprovado> listapedidos = service.findAll(PageRequest.of(currentPage - 1, pageSize));
 		model.addObject("pedidos", listapedidos);
 
 		int totalPages = listapedidos.getTotalPages();
@@ -70,20 +70,66 @@ public class DossieController {
 
 		return model;
 	}
-
-	@RequestMapping(value = "dossiemanager/registro", method = RequestMethod.GET)
+	
+	@RequestMapping("/receber")
 	@ResponseBody
-	public ModelAndView pesquisaregistro(@RequestParam Long numeroPedido, String cxInterna, String cxExterna) {
+	public ModelAndView receber(@RequestParam String numeroPedido) {
 
-//		DossieAprovado dossie = service.getDossie(numeroPedido, cxInterna, cxExterna);
-//		dossieRepository.save(dossie);
-//
-//		ModelAndView model = new ModelAndView("dossiemanager/registro");
-//
-//		model.addObject("pedidos", service.findPedidoByNumeroPedido(cxInterna, cxExterna));
-//		model.addObject(new DossieAprovado());
+		ModelAndView model = new ModelAndView("dossiemanager/recebimento");
+		DossieAprovado dossie = service.recebimento(numeroPedido);
+		if(dossie != null) {
+			dossieRepository.save(dossie);
+		}
 
-		return null;
+		model.addObject("pedidos", service.findPorDataDeUltimaAtualizacao());
+		model.addObject(new DossieAprovado());
+
+		return model;
+	}
+	
+	@RequestMapping("registro")
+	@ResponseBody
+	public ModelAndView registro() {
+
+		ModelAndView model = new ModelAndView("dossiemanager/registro");
+
+		return model;
+	}
+
+	@RequestMapping(value = "/registrar", method = RequestMethod.GET)
+	@ResponseBody
+	public ModelAndView pesquisaRegistro(@RequestParam String numeroPedido, String cxInterna, String cxExterna) {
+
+		ModelAndView model = new ModelAndView("dossiemanager/registro");
+		DossieAprovado dossie = service.vincularCaixas(numeroPedido, cxInterna, cxExterna);
+		if(dossie != null) {
+			dossieRepository.save(dossie);
+		}
+
+		model.addObject("pedidos", service.findByCaixaExternaAndCaixaInterna(cxInterna, cxExterna));
+		model.addObject(new DossieAprovado());
+
+		return model;
+	}
+	
+	@RequestMapping(value = "/excluir/{numeroPedido}", method = RequestMethod.GET)
+	@ResponseBody
+	public ModelAndView excluiRegistro(@RequestParam String numeroPedido) {
+		
+		DossieAprovado dossieOld = service.findPedido(numeroPedido);
+		String cxInterna = dossieOld.getCaixaInterna();
+		String cxExterna = dossieOld.getCaixaExterna();
+		
+		DossieAprovado dossie = service.desvinculoDeCaixas(numeroPedido);
+		
+		dossieRepository.save(dossie);
+
+		ModelAndView model = new ModelAndView("dossiemanager/registro");
+
+		model.addObject("pedidos", service.findByCaixaExternaAndCaixaInterna(cxInterna, cxExterna));
+		model.addObject(new DossieAprovado());
+
+		return model;
 	}
 
 	@RequestMapping(value = "/pesquisa")
@@ -106,7 +152,6 @@ public class DossieController {
 		if (totalPages > 0) {
 			List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages).boxed().collect(Collectors.toList());
 			model.addObject("pageNumbers", pageNumbers);
-			attributes.addFlashAttribute("mensagem", "Sucesso!!!");
 		}
 
 		return model;

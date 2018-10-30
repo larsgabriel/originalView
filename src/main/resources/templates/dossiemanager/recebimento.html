@@ -13,7 +13,7 @@
 		<div class="panel-heading">
 			<h3 class="panel-title">Recebimento</h3>
 		</div>
-		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{dossiemanager/recebimento}" style="margin: 20px 0">
+		<form class="form-inline" method="GET" th:object="${pedido}" th:action="@{/receber}" style="margin: 20px 0">
 			<div class="form-group">
 				<input type="text" class="form-control" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido"/> 
 				<button type="submit" class="btn btn-primary">Adicionar</button>
@@ -27,7 +27,6 @@
 					    <th>Pedido</th>
 						<th>CPF</th>
 						<th>CNPJ</th>
-						<th>AR</th>
 						<th>Status Ar</th>
 						<th>Status Certisign</th>
 					</tr>
@@ -37,8 +36,11 @@
 					    <td th:text="${pedido.numeroPedido}">Pedido</td>
 						<td th:text="${pedido.cpf}">CPF</td>
 						<td th:text="${pedido.cnpj}">CNPJ</td>
-						<td th:text="${pedido.statusAr}">Status Ar</td>
-						<td th:text="${pedido.idStatusPedido}">Status Certisign</td>
+						<td th:text="${pedido.statusAr}"
+							th:class="${pedido.statusAr == 'ENVIADO'} ? 'text-success' : (${pedido.statusAr == 'PENDENTE'} ? 'text-danger' : 'text-warning')">Status Ar</td>
+						<td th:text="${pedido.statusCertisign}"
+							th:class="${pedido.statusCertisign == 'ESTOCADO'} ? 'text-success' : (${pedido.statusCertisign == 'PENDENTE'} ? 'text-danger' : 'text-primary')">Status
+							Certisign</td>
 					</tr>
 				</tbody>
 			</table>

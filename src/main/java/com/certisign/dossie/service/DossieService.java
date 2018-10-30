@@ -1,6 +1,9 @@
 package com.certisign.dossie.service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -14,6 +17,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,33 +31,134 @@ import com.certisign.dossie.repository.DossieRepository;
 
 @Service
 public class DossieService {
-
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(DossieService.class);
+	
 	@PersistenceContext
 	EntityManager em;
 
 	@Autowired
 	DossieRepository repository;
 
-	public DossieAprovado getDossie(String numeroPedido, String cxInterna, String cxExterna) {
-		DossieAprovado dossie = new DossieAprovado();
+	Timestamp dataInsercao = transformaStringParaData();
+		
+	public DossieAprovado recebimento(String numeroPedido) {
+		DossieAprovado dossie = null;
+		String msg = null;
 		try {
 			String tipoTermo = tratarTermo(numeroPedido);
-			Long pedido = tratarPedido(numeroPedido);
-			dossie = findPedido(pedido);
-			dossie.setNumeroPedido(pedido);
-			dossie.setStatusCertisign("ESTOCADO");
-			dossie.setTipoTermo(tipoTermo);
-			dossie.setCaixaExterna(cxExterna);
-			dossie.setCaixaInterna(cxInterna);
-
+			dossie = findPedido(numeroPedido);
+			if(dossie != null) {
+				dossie.setStatusCertisign("RECEBIDO");
+				dossie.setTipoTermo(tipoTermo);
+				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+			}else{
+				msg = "Pedido não encontrado";
+				LOGGER.error(msg);
+				return null;
+			}
 		} catch (Exception e) {
-
+			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
+		}
+		return dossie;
+	}
+	
+	public DossieAprovado desvinculoDeCaixas(String numeroPedido) {
+		DossieAprovado dossie = null;
+		String msg = null;
+		try {
+			String tipoTermo = tratarTermo(numeroPedido);
+			dossie = findPedido(numeroPedido);
+			if(dossie != null) {
+				dossie.setStatusCertisign("PENDENTE");
+				dossie.setTipoTermo(tipoTermo);
+				dossie.setCaixaExterna("");
+				dossie.setCaixaInterna("");
+				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+			}else{
+				msg = "Pedido não encontrado";
+				LOGGER.error(msg);
+				return null;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
+		}
+		return dossie;
+	}
+	
+	
+	public DossieAprovado vincularCaixas(String numeroPedido, String cxInterna, String cxExterna) {
+		DossieAprovado dossie = null;
+		String msg = null;
+		try {
+			String tipoTermo = tratarTermo(numeroPedido);
+			dossie = findPedido(numeroPedido);
+			if(dossie != null) {
+				dossie.setStatusCertisign("ESTOCADO");
+				dossie.setTipoTermo(tipoTermo);
+				dossie.setCaixaExterna(cxExterna);
+				dossie.setCaixaInterna(cxInterna);
+				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+			}else{
+				msg = "Pedido não encontrado";
+				LOGGER.error(msg);
+				return null;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
 		}
 		return dossie;
 	}
 
-	public DossieAprovado findPedido(Long numeroPedido) {
-		DossieAprovado pedidos = repository.findByNumeroPedido(numeroPedido);
+	public Page<DossieAprovado> findAll(Pageable pageable) {
+
+		int pageSize = pageable.getPageSize();
+		int currentPage = pageable.getPageNumber();
+		int startItem = currentPage * pageSize;
+		List<DossieAprovado> dossies;
+		Page<DossieAprovado> dossiePage = null;
+
+		List<DossieAprovado> pedidos = repository.findAllByDataInsercaoAfter(dataInsercao);
+
+		if (pedidos.size() < startItem) {
+			dossies = Collections.emptyList();
+		} else {
+			int toIndex = Math.min(startItem + pageSize, pedidos.size());
+			dossies = pedidos.subList(startItem, toIndex);
+		}
+
+		dossiePage = new PageImpl<DossieAprovado>(dossies, PageRequest.of(currentPage, pageSize), pedidos.size());
+
+		return dossiePage;
+	}
+
+	public List<DossieAprovado> findByCaixaExternaAndCaixaInterna(String cxInterna, String cxExterna) {
+		List<DossieAprovado> pedidos = repository.findByCaixaExternaAndCaixaInterna(cxExterna, cxInterna);
+		return pedidos;
+	}
+
+	public DossieAprovado findPedido(String numeroPedido) {
+		DossieAprovado pedidos = null;
+		Long pedido = tratarPedido(numeroPedido);
+		try {
+			pedidos = repository.findByNumeroPedido(pedido);
+		} catch (Exception e) {
+			LOGGER.error("Pedido " + numeroPedido + " não encontrado!");
+		}
+		return pedidos;
+	}
+	
+	public List<DossieAprovado> findPorDataDeUltimaAtualizacao() {
+		List<DossieAprovado> pedidos = null;
+		LocalDateTime  date = LocalDateTime.now();
+		Timestamp  startOfDay = Timestamp.valueOf(date.with(LocalTime.MIDNIGHT));
+		Timestamp  endOfDay = Timestamp.valueOf(date.with(LocalTime.MAX));
+	
+		try {
+			pedidos = repository.findAllByDataUltAtualizacaoAfterAndDataUltAtualizacaoBefore(startOfDay, endOfDay);
+		} catch (Exception e) {
+			LOGGER.error("Pedidos não encontrado!" + e);
+		}
 		return pedidos;
 	}
 
@@ -67,19 +173,17 @@ public class DossieService {
 		List<DossieAprovado> pedidos = null;
 		List<DossieAprovado> dossies;
 
-
 		if (!numeroPedido.equals("")) {
 			pedido = tratarPedido(numeroPedido);
 		}
 
 		try {
-			
-			Timestamp  dataInsercao = transformaStringParaData();
-			
-			if (!statusAr.equals("Status Ar") || !statusCerti.equals("Status Certisign") || !cxExterna.equals("") || !cxInterna.equals("") || pedido != null) {
-				pedidos = buscaPedidosPorFiltros(pedido, cxInterna, cxExterna,  statusAr, statusCerti);
-			}else {
-				pedidos =  repository.findAllByDataInsercaoAfter(dataInsercao);
+
+			if (!statusAr.equals("Status Ar") || !statusCerti.equals("Status Certisign") || !cxExterna.equals("")
+					|| !cxInterna.equals("") || pedido != null) {
+				pedidos = buscaPedidosPorFiltros(pedido, cxInterna, cxExterna, statusAr, statusCerti);
+			} else {
+				pedidos = repository.findAllByDataInsercaoAfter(dataInsercao);
 			}
 
 			if (pedidos.size() < startItem) {
@@ -88,7 +192,7 @@ public class DossieService {
 				int toIndex = Math.min(startItem + pageSize, pedidos.size());
 				dossies = pedidos.subList(startItem, toIndex);
 			}
-		
+
 			dossiePage = new PageImpl<DossieAprovado>(dossies, PageRequest.of(currentPage, pageSize), dossies.size());
 
 		} catch (Exception e) {
@@ -103,11 +207,11 @@ public class DossieService {
 			String statusAr, String statusCerti) {
 
 		CriteriaBuilder qb = em.getCriteriaBuilder();
-		CriteriaQuery cq = qb.createQuery();
+		CriteriaQuery<DossieAprovado> cq = qb.createQuery(DossieAprovado.class);
 		Root<DossieAprovado> dossie = cq.from(DossieAprovado.class);
 		List<Predicate> predicates = new ArrayList<Predicate>();
 		List<DossieAprovado> pedidos;
-		Timestamp  dataInsercao = transformaStringParaData();
+		Timestamp dataInsercao = transformaStringParaData();
 
 		if (numeroPedido != null) {
 			predicates.add(qb.equal(dossie.get("numeroPedido"), numeroPedido));
@@ -132,7 +236,7 @@ public class DossieService {
 
 		return pedidos;
 	}
-	
+
 	public Timestamp transformaStringParaData() {
 		Calendar cal = Calendar.getInstance();
 		cal.add(Calendar.DATE, -30);
@@ -141,6 +245,13 @@ public class DossieService {
 
 	}
 	
+	public Timestamp dataUltimaAtualizacao() {
+		Calendar cal = Calendar.getInstance();
+		Timestamp data = new Timestamp(cal.getTimeInMillis());
+		return data;
+
+	}
+
 	public Long tratarPedido(String numeroPedido) {
 
 		String pedido = "";
@@ -163,28 +274,4 @@ public class DossieService {
 		}
 		return termo;
 	}
-
-	public Page<DossieAprovado> getAll(Pageable pageable) {
-
-		String SQL_SUBLIST = "from tbl_dossie WHERE ROWNUM BETWEEN %d AND %d";
-		int pageSize = pageable.getPageSize();
-		int currentPage = pageable.getPageNumber();
-		int startItem = currentPage * pageSize;
-		List<DossieAprovado> list;
-
-		String sql = String.format(SQL_SUBLIST, 1, 50);
-		Query query = em.createQuery(sql);
-		List<DossieAprovado> pedidos = query.getResultList();
-
-		if (pedidos.size() < startItem) {
-			list = Collections.emptyList();
-		} else {
-			int toIndex = Math.min(startItem + pageSize, pedidos.size());
-			list = pedidos.subList(startItem, toIndex);
-		}
-		Page<DossieAprovado> bookPage = new PageImpl<DossieAprovado>(list, PageRequest.of(currentPage, pageSize),
-				pedidos.size());
-		return bookPage;
-	}
-
 }
