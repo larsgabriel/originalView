@@ -19,7 +19,7 @@
 		<div class="panel-heading">
 			<h3 class="panel-title">Pesquisa de Dossiê</h3>
 		</div>
-		<form class="form-inline" method="GET" th:object="${pedido}"
+		<form class="form-inline" method="POST" th:object="${pedido}"
 			th:action="@{/pesquisa}" style="margin: 10px">
 			<div class="form-group">
 				<input type="text" class="form-control-sm" name="numeroPedido" th:value="${numeroPedido}" id=numeroPedido placeholder="Pedido" />
@@ -73,16 +73,13 @@
 				</tbody>
 			</table>
 			<hr/>
-			<nav>
 			<ul class= "pagination">
-				<li class="page-item" th:if="${pedidos.totalPages > 0}" th:each="pageNumber : ${pageNumbers}">
+				<li class="page-item" th:if="${pedidos.totalPages > 0}" th:each="pageNumber : ${pageNumbers}" >
 					<a  
-					th:href="@{/inicial(size=${pedidos.size}, page=${pageNumber})}" class="page-link"
-					th:text=${pageNumber}>
+					th:href="@{/inicial(size=${pedidos.size}, page=${pageNumber})}" class="page-link" th:text=${pageNumber}>
 					</a>
 				</li>
 			</ul>
-			</nav>
 		</div>
 	</div>
 </body>

@@ -12,17 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
-import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.certisign.dossie.model.DossieAprovado;
+import com.certisign.dossie.model.FormPesquisa;
 import com.certisign.dossie.repository.DossieRepository;
 import com.certisign.dossie.service.DossieService;
 
@@ -38,7 +37,7 @@ public class DossieController {
 	private EntityManager em;
 
 	private static int currentPage = 1;
-	private static int pageSize = 10;
+	private static int pageSize = 10; 
 
 	@RequestMapping("inicial")
 	@ResponseBody
@@ -55,18 +54,38 @@ public class DossieController {
 
 		int totalPages = listapedidos.getTotalPages();
 		if (totalPages > 0) {
-			List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages).boxed().collect(Collectors.toList());
+			List<Integer> pageNumbers = IntStream.rangeClosed(1, 5).boxed().collect(Collectors.toList());
 			model.addObject("pageNumbers", pageNumbers);
 		}
 
 		return model;
 	}
-
-	@RequestMapping("recebimento")
+	
+	@RequestMapping(value = "/pesquisa", method=RequestMethod.POST)
 	@ResponseBody
-	public ModelAndView recebimento() {
+	public ModelAndView pesquisa(@RequestParam("page") Optional<Integer> page, 
+			@RequestParam("size") Optional<Integer> size, @ModelAttribute("pedido") FormPesquisa pedido) {
+			
+		if(pedido.getSize() != null) {
+			currentPage = pedido.getSize();
+		}
 
-		ModelAndView model = new ModelAndView("dossiemanager/recebimento");
+		if(pedido.getPage() != null) {
+			pageSize = pedido.getPage();
+		}
+		
+		ModelAndView model = new ModelAndView("dossiemanager/pesquisa");
+
+		Page<DossieAprovado> dossiePage = service.pesquisa(PageRequest.of(currentPage - 1, pageSize), pedido);
+
+		if (dossiePage != null) {
+			model.addObject("pedidos", dossiePage);
+		}
+		int totalPages = dossiePage.getTotalPages();
+		if (totalPages > 0) {
+			List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages).boxed().collect(Collectors.toList());
+			model.addObject("pageNumbers", pageNumbers);
+		}
 
 		return model;
 	}
@@ -83,6 +102,15 @@ public class DossieController {
 
 		model.addObject("pedidos", service.findPorDataDeUltimaAtualizacao());
 		model.addObject(new DossieAprovado());
+
+		return model;
+	}
+	
+	@RequestMapping("recebimento")
+	@ResponseBody
+	public ModelAndView recebimento() {
+
+		ModelAndView model = new ModelAndView("dossiemanager/recebimento");
 
 		return model;
 	}
@@ -131,30 +159,4 @@ public class DossieController {
 
 		return model;
 	}
-
-	@RequestMapping(value = "/pesquisa")
-	@ResponseBody
-	public ModelAndView pesquisa(@RequestParam("page") Optional<Integer> page,
-			@RequestParam("size") Optional<Integer> size, @RequestParam String numeroPedido, String cxInterna,
-			String cxExterna, String statusAr, String statusCertisign,  RedirectAttributes attributes) {
-
-		page.ifPresent(p -> currentPage = p);
-		size.ifPresent(s -> pageSize = s);
-		ModelAndView model = new ModelAndView("dossiemanager/pesquisa");
-
-		Page<DossieAprovado> dossiePage = service.pesquisa(PageRequest.of(currentPage - 1, pageSize), numeroPedido,
-				cxInterna, cxExterna, statusAr, statusCertisign);
-
-		if (dossiePage != null) {
-			model.addObject("pedidos", dossiePage);
-		}
-		int totalPages = dossiePage.getTotalPages();
-		if (totalPages > 0) {
-			List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages).boxed().collect(Collectors.toList());
-			model.addObject("pageNumbers", pageNumbers);
-		}
-
-		return model;
-	}
-
 }
