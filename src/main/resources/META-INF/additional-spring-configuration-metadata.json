@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "certificado.url.login",
+    "type": "java.lang.String",
+    "description": "A description for 'certificado.url.login'"
+  },
+  {
+    "name": "integracao.contexto.contexto-pedido",
+    "type": "java.lang.String",
+    "description": "A description for 'integracao.contexto.contexto-pedido'"
+  },
+  {
+    "name": "integracao.contexto.contexto-pedido",
+    "type": "java.lang.String",
+    "description": "A description for 'integracao.contexto.contexto-pedido'"
+  },
+  {
+    "name": "emissores.permitidos",
+    "type": "java.lang.String",
+    "description": "A description for 'emissores.permitidos'"
+  }
+]}
