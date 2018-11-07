@@ -9,6 +9,7 @@ public class FormPesquisa {
 	private String statusCertisign;
 	private Integer page;
 	private Integer size;
+	private Long pedidoTratado;
 	
 	public Integer getPage() {
 		return page;
@@ -51,6 +52,12 @@ public class FormPesquisa {
 	}
 	public void setStatusCertisign(String statusCertisign) {
 		this.statusCertisign = statusCertisign;
+	}
+	public Long getPedidoTratado() {
+		return pedidoTratado;
+	}
+	public void setPedidoTratado(Long pedidoTratado) {
+		this.pedidoTratado = pedidoTratado;
 	}
 	
 	

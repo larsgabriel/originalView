@@ -1,21 +1,14 @@
 package com.certisign.dossie.utils;
 
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 
 import org.springframework.boot.configurationprocessor.json.JSONObject;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import com.certisign.dossie.model.DossieAprovado;
@@ -45,6 +38,19 @@ public class DossieUtils {
 		}
 
 		return dtos;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public DossieAprovado translateDossie(Object responseDossie) throws JsonParseException, JsonMappingException, IOException {
+
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		@SuppressWarnings("unchecked")
+		String jsonString = new JSONObject((Map<Object, DossieAprovado>) responseDossie).toString();
+
+		DossieAprovado vo = objectMapper.readValue(jsonString, DossieAprovado.class);
+		
+		return vo;
 	}
 	
 

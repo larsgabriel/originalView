@@ -3,17 +3,9 @@ package com.certisign.dossie.service;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +21,8 @@ import org.springframework.web.client.RestTemplate;
 import com.certisign.dossie.config.property.IntegracaoApiProperty;
 import com.certisign.dossie.model.DossieAprovado;
 import com.certisign.dossie.model.FormPesquisa;
+import com.certisign.dossie.model.FormRecebimento;
+import com.certisign.dossie.model.FormRegistro;
 import com.certisign.dossie.repository.DossieRepository;
 import com.certisign.dossie.utils.DossieUtils;
 
@@ -36,12 +30,6 @@ import com.certisign.dossie.utils.DossieUtils;
 public class DossieService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DossieService.class);
-
-	@PersistenceContext
-	EntityManager em;
-
-	@Autowired
-	DossieRepository repository;
 
 	@Autowired
 	IntegracaoApiProperty integracaoApiPropert;
@@ -51,18 +39,27 @@ public class DossieService {
 
 	Timestamp dataInsercao = transformaStringParaData();
 
-	public DossieAprovado recebimento(String numeroPedido) {
-		Long numPedido = tratarPedido(numeroPedido);
+	public void recebimento(FormRecebimento formRecebimento) {
+
+		Long numPedido = tratarPedido(formRecebimento.getNumeroPedido());
 		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
 		RestTemplate restTemplate = new RestTemplate();
-		String url = pedidoUrl + "/dossie-api/recebimento/" + numPedido;
-		DossieAprovado dossie = new DossieAprovado();
+		String url = pedidoUrl + "/dossie-api/recebimento/";
+		formRecebimento.setPedidoTratado(numPedido);
+		DossieAprovado dossie = null;
+		String tipoTermo = tratarTermo(formRecebimento.getNumeroPedido());
+
 		try {
-			dossie = restTemplate.getForObject(url, DossieAprovado.class);
+			dossie = buscarPedido(formRecebimento.getPedidoTratado());
+			if (dossie != null) {
+				dossie.setStatusCertisign("RECEBIDO");
+				dossie.setTipoTermo(tipoTermo);
+				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+			}
+			restTemplate.postForEntity(url, dossie, Object.class);
 		} catch (Exception e) {
-			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
+			LOGGER.error("Pedido" + formRecebimento.getNumeroPedido() + "não encontrado!");
 		}
-		return dossie;
 	}
 
 	public Page<DossieAprovado> pesquisa(Pageable pageable, FormPesquisa formPesquisa) {
@@ -70,7 +67,6 @@ public class DossieService {
 		int pageSize = pageable.getPageSize();
 		int currentPage = pageable.getPageNumber();
 		int startItem = currentPage * pageSize;
-		Long pedido = 0l;
 		Page<DossieAprovado> dossiePage = null;
 		List<DossieAprovado> pedidos = null;
 		List<DossieAprovado> dossies;
@@ -78,71 +74,24 @@ public class DossieService {
 		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
 		RestTemplate restTemplate = new RestTemplate();
 
-		if (!formPesquisa.getNumeroPedido().equals("")) {
-			pedido = tratarPedido(formPesquisa.getNumeroPedido());
+		if (formPesquisa.getNumeroPedido() != null && !formPesquisa.getNumeroPedido().isEmpty()) {
+			formPesquisa.setPedidoTratado(tratarPedido(formPesquisa.getNumeroPedido()));
 		}
 
 		try {
 
-			if (formPesquisa.getNumeroPedido() != null || formPesquisa.getCxInterna() != null || formPesquisa.getCxExterna() != null
-					|| !formPesquisa.getStatusAr().equals("StatusAr") || !formPesquisa.getStatusCertisign().equals("StatusCertisign")) {
-
-				String url = pedidoUrl + "/dossie-api/pesquisaPorFiltros/";
-
-				ResponseEntity<Object> pedidosObj = restTemplate.postForEntity(url, formPesquisa, Object.class);
-				if (pedidosObj != null) {
-					pedidos = dossieUtils.translateObjets((List)pedidosObj.getBody());
-				}
-
-			} else {
-
-				String url = pedidoUrl + "/dossie-api/pesquisaPorDtInsercao";
-				Object pedidosObj = restTemplate.getForObject(url, Object.class);
-
-				if (pedidosObj != null) {
-					pedidos = dossieUtils.translateDossiesVO((List) pedidosObj);
-				}
-			}
-
-			if (pedidos.size() < startItem) {
-				dossies = Collections.emptyList();
-			} else {
-				int toIndex = Math.min(startItem + pageSize, pedidos.size());
-				dossies = pedidos.subList(startItem, toIndex);
-			}
-
-			dossiePage = new PageImpl<DossieAprovado>(dossies, PageRequest.of(currentPage, pageSize), pedidos.size());
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return dossiePage;
-
-	}
-
-	public Page<DossieAprovado> findAll(Pageable pageable) {
-
-		int pageSize = pageable.getPageSize();
-		int currentPage = pageable.getPageNumber();
-		int startItem = currentPage * pageSize;
-		List<DossieAprovado> dossies;
-		List<DossieAprovado> pedidos = null;
-		Page<DossieAprovado> dossiePage = null;
-
-		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
-		RestTemplate restTemplate = new RestTemplate();
-
-		try {
-
-			String url = pedidoUrl + "/dossie-api/pesquisaPorDtInsercao";
-			Object pedidosObj = restTemplate.getForObject(url, Object.class);
+			String url = pedidoUrl + "/dossie-api/pesquisaPorFiltros/";
+			ResponseEntity<Object> pedidosObj = restTemplate.postForEntity(url, formPesquisa, Object.class);
 
 			if (pedidosObj != null) {
-				pedidos = dossieUtils.translateDossiesVO((List) pedidosObj);
+				pedidos = dossieUtils.translateObjets((List) pedidosObj.getBody());
 			}
 
-			if (pedidos.size() < startItem) {
+			if (startItem > pedidos.size()) {
+				startItem = 0;
+			}
+
+			if (pedidos.size() < 1) {
 				dossies = Collections.emptyList();
 			} else {
 				int toIndex = Math.min(startItem + pageSize, pedidos.size());
@@ -156,67 +105,77 @@ public class DossieService {
 		}
 
 		return dossiePage;
+
 	}
 
-	public DossieAprovado desvinculoDeCaixas(String numeroPedido) {
+	public void desvinculoDeCaixas(Long numeroPedido) {
 		DossieAprovado dossie = null;
 		String msg = null;
+		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
+		RestTemplate restTemplate = new RestTemplate();
+		String url = pedidoUrl + "/dossie-api/desvincularCaixas/";
 		try {
-			String tipoTermo = tratarTermo(numeroPedido);
-			dossie = findPedido(numeroPedido);
+			dossie = buscarPedido(numeroPedido);
 			if (dossie != null) {
 				dossie.setStatusCertisign("PENDENTE");
-				dossie.setTipoTermo(tipoTermo);
 				dossie.setCaixaExterna("");
 				dossie.setCaixaInterna("");
 				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+				
+				restTemplate.postForEntity(url, dossie, Object.class);
 			} else {
 				msg = "Pedido não encontrado";
 				LOGGER.error(msg);
-				return null;
 			}
 		} catch (Exception e) {
 			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
 		}
-		return dossie;
 	}
 
-	public DossieAprovado vincularCaixas(String numeroPedido, String cxInterna, String cxExterna) {
+	public void vincularCaixas(FormRegistro formRegistro) {
 		DossieAprovado dossie = null;
 		String msg = null;
+		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
+		RestTemplate restTemplate = new RestTemplate();
+		String url = pedidoUrl + "/dossie-api/vincularCaixas/";
+
 		try {
-			String tipoTermo = tratarTermo(numeroPedido);
-			dossie = findPedido(numeroPedido);
+			String tipoTermo = tratarTermo(formRegistro.getNumeroPedido());
+			formRegistro.setPedidoTratado(tratarPedido(formRegistro.getNumeroPedido()));
+			dossie = buscarPedido(formRegistro.getPedidoTratado());
 			if (dossie != null) {
 				dossie.setStatusCertisign("ESTOCADO");
 				dossie.setTipoTermo(tipoTermo);
-				dossie.setCaixaExterna(cxExterna);
-				dossie.setCaixaInterna(cxInterna);
+				dossie.setCaixaExterna(formRegistro.getCxExterna());
+				dossie.setCaixaInterna(formRegistro.getCxInterna());
 				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+
+				restTemplate.postForEntity(url, dossie, Object.class);
+
 			} else {
 				msg = "Pedido não encontrado";
 				LOGGER.error(msg);
-				return null;
+			}
+
+		} catch (Exception e) {
+			LOGGER.error("Pedido" + formRegistro.getPedidoTratado() + "não encontrado!");
+		}
+	}
+
+	public List<DossieAprovado> findByCaixaExternaAndCaixaInterna(DossieAprovado dossie) {
+		RestTemplate restTemplate = new RestTemplate();
+		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
+		String url = pedidoUrl + "/dossie-api/buscaPorCaixas/";
+		List<DossieAprovado> pedidos = null;
+		try {
+			ResponseEntity<Object> pedidosObj = restTemplate.postForEntity(url, dossie, Object.class);
+			if (pedidosObj != null) {
+				pedidos = dossieUtils.translateObjets((List) pedidosObj.getBody());
 			}
 		} catch (Exception e) {
-			LOGGER.error("Pedido" + numeroPedido + "não encontrado!");
+			LOGGER.error("Pedidos não encontrado!" + e);
 		}
-		return dossie;
-	}
 
-	public List<DossieAprovado> findByCaixaExternaAndCaixaInterna(String cxInterna, String cxExterna) {
-		List<DossieAprovado> pedidos = repository.findByCaixaExternaAndCaixaInterna(cxExterna, cxInterna);
-		return pedidos;
-	}
-
-	public DossieAprovado findPedido(String numeroPedido) {
-		DossieAprovado pedidos = null;
-		Long pedido = tratarPedido(numeroPedido);
-		try {
-			pedidos = repository.findByNumeroPedido(pedido);
-		} catch (Exception e) {
-			LOGGER.error("Pedido " + numeroPedido + " não encontrado!");
-		}
 		return pedidos;
 	}
 
@@ -225,47 +184,41 @@ public class DossieService {
 		LocalDateTime date = LocalDateTime.now();
 		Timestamp startOfDay = Timestamp.valueOf(date.with(LocalTime.MIDNIGHT));
 		Timestamp endOfDay = Timestamp.valueOf(date.with(LocalTime.MAX));
-
+		RestTemplate restTemplate = new RestTemplate();
+		
 		try {
-			pedidos = repository.findAllByDataUltAtualizacaoAfterAndDataUltAtualizacaoBefore(startOfDay, endOfDay);
+			
+			String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
+			String url = pedidoUrl + "/dossie-api/findAllDataUltimaAtualizacao/" + startOfDay + "/" + endOfDay;
+			Object pedidosObj = restTemplate.getForObject(url, Object.class);
+			
+			if (pedidosObj != null) {
+				pedidos = dossieUtils.translateObjets((List) pedidosObj);
+			}
+
 		} catch (Exception e) {
 			LOGGER.error("Pedidos não encontrado!" + e);
 		}
 		return pedidos;
 	}
 
-	public List<DossieAprovado> buscaPedidosPorFiltros(Long numeroPedido, String cxInterna, String cxExterna,
-			String statusAr, String statusCerti) {
+	public DossieAprovado buscarPedido(Long numeroPedido) {
+		DossieAprovado pedido = null;
+		String pedidoUrl = integracaoApiPropert.getContexto().getContextoPedido();
+		RestTemplate restTemplate = new RestTemplate();
+		String url = pedidoUrl + "/dossie-api/buscarPedido/" + numeroPedido ;
+		try {
 
-		CriteriaBuilder qb = em.getCriteriaBuilder();
-		CriteriaQuery<DossieAprovado> cq = qb.createQuery(DossieAprovado.class);
-		Root<DossieAprovado> dossie = cq.from(DossieAprovado.class);
-		List<Predicate> predicates = new ArrayList<Predicate>();
-		List<DossieAprovado> pedidos;
-		Timestamp dataInsercao = transformaStringParaData();
+			Object pedidosObj = restTemplate.getForObject(url, Object.class);
+			
+			if (pedidosObj != null) {
+				pedido = dossieUtils.translateDossie(pedidosObj);
+			}
 
-		if (numeroPedido != null) {
-			predicates.add(qb.equal(dossie.get("numeroPedido"), numeroPedido));
+		} catch (Exception e) {
+			LOGGER.error("Pedido " + numeroPedido + " não encontrado!");
 		}
-		if (!cxInterna.equals("")) {
-			predicates.add(qb.equal(dossie.get("caixaInterna"), cxInterna));
-		}
-		if (!cxExterna.equals("")) {
-			predicates.add(qb.equal(dossie.get("caixaExterna"), cxExterna));
-		}
-		if (!statusAr.equals("Status Ar")) {
-			predicates.add(qb.equal(dossie.get("statusAr"), statusAr.toUpperCase()));
-			predicates.add(qb.greaterThan(dossie.get("dataInsercao"), dataInsercao));
-		}
-		if (!statusCerti.equals("Status Certisign")) {
-			predicates.add(qb.equal(dossie.get("statusCertisign"), statusCerti.toUpperCase()));
-			predicates.add(qb.greaterThan(dossie.get("dataInsercao"), dataInsercao));
-		}
-
-		cq.select(dossie).where(predicates.toArray(new Predicate[] {}));
-		pedidos = em.createQuery(cq).getResultList();
-
-		return pedidos;
+		return pedido;
 	}
 
 	public Timestamp transformaStringParaData() {

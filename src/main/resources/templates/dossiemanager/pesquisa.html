@@ -26,12 +26,12 @@
 				<input type="text" class="ml-3 form-control-sm" name="cxInterna" th:value="${cxInterna}" id=cxInterna placeholder="Caixa Interna" />
 				<input type="text" class="ml-3 form-control-sm" name="cxExterna" th:value="${cxExterna}" id=cxExterna placeholder="Caixa Externa" />
 				<select class="ml-3 custom-select-sm" id="statusAr" name="statusAr"	th:value="${statusAr}">
-					<option selected>Status Ar</option>
+					<option value="" selected disabled>Status Ar</option>
 					<option value="Pendente">Pendente</option>
 					<option value="Enviado">Enviado</option>
 				</select>
 				<select class="ml-3 custom-select-sm" id="statusCertisign" name="statusCertisign"	th:value="${statusCertisign}">
-					<option selected>Status Certisign</option>
+					<option value="" selected disabled>Status Certisign</option>
 					<option value="Pendente">Pendente</option>
 					<option value="Enviado">Enviado</option>
 					<option value="Recebido">Recebido</option>
@@ -76,7 +76,7 @@
 			<ul class= "pagination">
 				<li class="page-item" th:if="${pedidos.totalPages > 0}" th:each="pageNumber : ${pageNumbers}" >
 					<a  
-					th:href="@{/inicial(size=${pedidos.size}, page=${pageNumber})}" class="page-link" th:text=${pageNumber}>
+					th:href="@{/pesquisa(size=${pedidos.size}, page=${pageNumber})}" class="page-link" th:text=${pageNumber}>
 					</a>
 				</li>
 			</ul>
