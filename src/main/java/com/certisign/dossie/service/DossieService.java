@@ -23,7 +23,6 @@ import com.certisign.dossie.model.DossieAprovado;
 import com.certisign.dossie.model.FormPesquisa;
 import com.certisign.dossie.model.FormRecebimento;
 import com.certisign.dossie.model.FormRegistro;
-import com.certisign.dossie.repository.DossieRepository;
 import com.certisign.dossie.utils.DossieUtils;
 
 @Service
@@ -55,10 +54,11 @@ public class DossieService {
 				dossie.setStatusCertisign("RECEBIDO");
 				dossie.setTipoTermo(tipoTermo);
 				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+				dossie.setDataRecebimento(dataUltimaAtualizacao());
+				restTemplate.postForEntity(url, dossie, Object.class);
 			}
-			restTemplate.postForEntity(url, dossie, Object.class);
 		} catch (Exception e) {
-			LOGGER.error("Pedido" + formRecebimento.getNumeroPedido() + "não encontrado!");
+			LOGGER.error("Pedido " + formRecebimento.getNumeroPedido() + " não encontrado!");
 		}
 	}
 
@@ -149,6 +149,7 @@ public class DossieService {
 				dossie.setCaixaExterna(formRegistro.getCxExterna());
 				dossie.setCaixaInterna(formRegistro.getCxInterna());
 				dossie.setDataUltAtualizacao(dataUltimaAtualizacao());
+				dossie.setDataRegistro(dataUltimaAtualizacao());
 
 				restTemplate.postForEntity(url, dossie, Object.class);
 
