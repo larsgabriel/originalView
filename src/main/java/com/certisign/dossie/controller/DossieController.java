@@ -5,15 +5,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,8 +29,6 @@ public class DossieController {
 
 	@Autowired
 	private DossieService service;
-	@PersistenceContext
-	private EntityManager em;
 
 	private static int currentPage = 1;
 	private static int pageSize = 10; 
@@ -126,4 +120,5 @@ public class DossieController {
 
 		return model;
 	}
+	
 }
