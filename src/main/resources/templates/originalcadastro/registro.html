@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+	
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<title>Cadastro de Cliente</title>
+<link rel="stylesheet" th:href="@{/css/bootstrap.min.css}"></link>
+<script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+</head>
+
+<body>
+	<div th:replace="originalcadastro/nav :: nav"></div>
+     <div class="panel panel-default" style="margin: 60px">
+		<div class="panel-heading">
+		<h3 class="panel-title">Cadastrar Cliente</h3>
+		</div>
+		<form class="form-inline" method="POST" th:object="${customer}" th:action="@{/addCustomer}" style="margin: 20px 0">
+			<div class="form-group">
+				<input type="text" class="form-control" name="name" th:value="${name}" id=name placeholder="Nome"/> 
+				<input type="text" class="form-control" name="email" th:value="${email}" id=email placeholder="Email"/> 
+				<button type="submit" class="btn btn-primary">Adicionar</button>
+			</div>
+		</form>
+
+        <div class="panel-body">
+			<table class="table table-striped table table-sm">
+				<thead>
+					<tr>
+					    <th>Id</th>
+						<th>Nome</th>
+						<th>Email</th>
+						<th>Excluir</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="customer : ${customers}">
+					    <td th:text="${customer.id}">Id</td>
+						<td th:text="${customer.name}">Nome</td>
+						<td th:text="${customer.email}">Email</td>
+						<td><a th:href="@{/delete/id(id=${customer.id})}" >Excluir</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</body>
+</html>
